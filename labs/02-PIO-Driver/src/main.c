@@ -193,7 +193,28 @@ void _pio_set_output(Pio *p_pio, const uint32_t ul_mask,
 	p_pio->PIO_PER = ul_mask;
 }
 
-
+/**
+ * \brief Return 1 if one or more PIOs of the given Pin instance currently have
+ * a high level; otherwise returns 0. This method returns the actual value that
+ * is being read on the pin. To return the supposed output value of a pin, use
+ * pio_get_output_data_status() instead.
+ *
+ * \param p_pio Pointer to a PIO instance.
+ * \param ul_type PIO type.
+ * \param ul_mask Bitmask of one or more pin(s) to configure.
+ *
+ * \retval 1 at least one PIO currently has a high level.
+ * \retval 0 all PIOs have a low level.
+ */
+uint32_t _pio_get(Pio *p_pio, const pio_type_t ul_type,
+        const uint32_t ul_mask)
+{
+	if (ul_type == PIO_INPUT) {
+		return (p_pio->PIO_PDSR & ul_mask);
+	} else {
+		return (p_pio->PIO_ODSR & ul_mask);
+	}
+}
 
 // Function to start the uC
 void init(void){
@@ -239,7 +260,7 @@ int main(void)
 	while (1)
 	{
 		// Check value of the pin that SW is connected
-		if (!pio_get(BUT1_PIO, PIO_INPUT, BUT1_PIO_IDX_MASK)) {
+		if (!_pio_get(BUT1_PIO, PIO_INPUT, BUT1_PIO_IDX_MASK)) {
 			// Blink LED
 			for (int i = 0; i < 5; i++) {
 				_pio_clear(LED1_PIO, LED1_PIO_IDX_MASK); // Clean the pin for LED_PIO_PIN (on)
@@ -248,12 +269,12 @@ int main(void)
 				delay_ms(100);
 		  	}
 	  	} 
-		if (pio_get(BUT1_PIO, PIO_INPUT, BUT1_PIO_IDX_MASK)) {
+		if (_pio_get(BUT1_PIO, PIO_INPUT, BUT1_PIO_IDX_MASK)) {
 			// Activate the LED_IDX pin (off)
 			_pio_set(LED1_PIO, LED1_PIO_IDX_MASK);
 	  	}
 
-		if (!pio_get(BUT2_PIO, PIO_INPUT, BUT2_PIO_IDX_MASK)) {
+		if (!_pio_get(BUT2_PIO, PIO_INPUT, BUT2_PIO_IDX_MASK)) {
 			// Blink LED
 			for (int i = 0; i < 5; i++) {
 				_pio_clear(LED2_PIO, LED2_PIO_IDX_MASK); // Clean the pin for LED_PIO_PIN (on)
@@ -262,12 +283,12 @@ int main(void)
 				delay_ms(100);
 			}
 	  	}
-	  	if (pio_get(BUT2_PIO, PIO_INPUT, BUT2_PIO_IDX_MASK)) {
+	  	if (_pio_get(BUT2_PIO, PIO_INPUT, BUT2_PIO_IDX_MASK)) {
 			// Activate the LED_IDX pin (off)
 			_pio_set(LED2_PIO, LED2_PIO_IDX_MASK);
 		}
 
-		if (!pio_get(BUT3_PIO, PIO_INPUT, BUT3_PIO_IDX_MASK)) {
+		if (!_pio_get(BUT3_PIO, PIO_INPUT, BUT3_PIO_IDX_MASK)) {
 			// Blink LED
 			for (int i = 0; i < 5; i++) {
 				_pio_clear(LED3_PIO, LED3_PIO_IDX_MASK); // Clean the pin for LED_PIO_PIN (on)
@@ -276,7 +297,7 @@ int main(void)
 				delay_ms(100);
 		  	}
 		}
-	  	if (pio_get(BUT3_PIO, PIO_INPUT, BUT3_PIO_IDX_MASK)) {
+	  	if (_pio_get(BUT3_PIO, PIO_INPUT, BUT3_PIO_IDX_MASK)) {
 			// Activate the LED_IDX pin (off)
 			_pio_set(LED3_PIO, LED3_PIO_IDX_MASK);
 		}
