@@ -84,6 +84,33 @@ void init(void);
 /* funcoes                                                              */
 /************************************************************************/
 
+/**
+ * \brief Set a high output level on all the PIOs defined in ul_mask.
+ * This has no immediate effects on PIOs that are not output, but the PIO
+ * controller will save the value if they are changed to outputs.
+ *
+ * \param p_pio Pointer to a PIO instance.
+ * \param ul_mask Bitmask of one or more pin(s) to configure.
+ */
+void _pio_set(Pio *p_pio, const uint32_t ul_mask)
+{
+	p_pio->PIO_SODR = ul_mask;
+}
+
+/**
+ * \brief Set a low output level on all the PIOs defined in ul_mask.
+ * This has no immediate effects on PIOs that are not output, but the PIO
+ * controller will save the value if they are changed to outputs.
+ *
+ * \param p_pio Pointer to a PIO instance.
+ * \param ul_mask Bitmask of one or more pin(s) to configure.
+ */
+void _pio_clear(Pio *p_pio, const uint32_t ul_mask)
+{
+	p_pio->PIO_CODR = ul_mask;
+}
+
+
 // Function to start the uC
 void init(void){
 	// Initialize the board clock
@@ -136,43 +163,43 @@ int main(void)
 		if (!pio_get(BUT1_PIO, PIO_INPUT, BUT1_PIO_IDX_MASK)) {
 			// Blink LED
 			for (int i = 0; i < 5; i++) {
-				pio_clear(LED1_PIO, LED1_PIO_IDX_MASK); // Clean the pin for LED_PIO_PIN (on)
+				_pio_clear(LED1_PIO, LED1_PIO_IDX_MASK); // Clean the pin for LED_PIO_PIN (on)
 				delay_ms(100);
-				pio_set(LED1_PIO, LED1_PIO_IDX_MASK); // Activate the pin for LED_PIO_PIN (off)
+				_pio_set(LED1_PIO, LED1_PIO_IDX_MASK); // Activate the pin for LED_PIO_PIN (off)
 				delay_ms(100);
 		  	}
 	  	} 
 		if (pio_get(BUT1_PIO, PIO_INPUT, BUT1_PIO_IDX_MASK)) {
 			// Activate the LED_IDX pin (off)
-			pio_set(LED1_PIO, LED1_PIO_IDX_MASK);
+			_pio_set(LED1_PIO, LED1_PIO_IDX_MASK);
 	  	}
 
 		if (!pio_get(BUT2_PIO, PIO_INPUT, BUT2_PIO_IDX_MASK)) {
 			// Blink LED
 			for (int i = 0; i < 5; i++) {
-				pio_clear(LED2_PIO, LED2_PIO_IDX_MASK); // Clean the pin for LED_PIO_PIN (on)
+				_pio_clear(LED2_PIO, LED2_PIO_IDX_MASK); // Clean the pin for LED_PIO_PIN (on)
 				delay_ms(100);
-				pio_set(LED2_PIO, LED2_PIO_IDX_MASK); // Activate the pin for LED_PIO_PIN (off)
+				_pio_set(LED2_PIO, LED2_PIO_IDX_MASK); // Activate the pin for LED_PIO_PIN (off)
 				delay_ms(100);
 			}
 	  	}
 	  	if (pio_get(BUT2_PIO, PIO_INPUT, BUT2_PIO_IDX_MASK)) {
 			// Activate the LED_IDX pin (off)
-			pio_set(LED2_PIO, LED2_PIO_IDX_MASK);
+			_pio_set(LED2_PIO, LED2_PIO_IDX_MASK);
 		}
 
 		if (!pio_get(BUT3_PIO, PIO_INPUT, BUT3_PIO_IDX_MASK)) {
 			// Blink LED
 			for (int i = 0; i < 5; i++) {
-				pio_clear(LED3_PIO, LED3_PIO_IDX_MASK); // Clean the pin for LED_PIO_PIN (on)
+				_pio_clear(LED3_PIO, LED3_PIO_IDX_MASK); // Clean the pin for LED_PIO_PIN (on)
 				delay_ms(100);
-				pio_set(LED3_PIO, LED3_PIO_IDX_MASK); // Activate the pin for LED_PIO_PIN (off)
+				_pio_set(LED3_PIO, LED3_PIO_IDX_MASK); // Activate the pin for LED_PIO_PIN (off)
 				delay_ms(100);
 		  	}
 		}
 	  	if (pio_get(BUT3_PIO, PIO_INPUT, BUT3_PIO_IDX_MASK)) {
 			// Activate the LED_IDX pin (off)
-			pio_set(LED3_PIO, LED3_PIO_IDX_MASK);
+			_pio_set(LED3_PIO, LED3_PIO_IDX_MASK);
 		}
 	}
 	return 0;
