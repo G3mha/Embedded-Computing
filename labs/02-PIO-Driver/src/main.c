@@ -110,6 +110,21 @@ void _pio_clear(Pio *p_pio, const uint32_t ul_mask)
 	p_pio->PIO_CODR = ul_mask;
 }
 
+/**
+ * \brief Configure PIO internal pull-up.
+ *
+ * \param p_pio Pointer to a PIO instance.
+ * \param ul_mask Bitmask of one or more pin(s) to configure.
+ * \param ul_pull_up_enable Indicates if the pin(s) internal pull-up shall be
+ * configured.
+ */
+void _pio_pull_up(Pio *p_pio, const uint32_t ul_mask, const uint32_t ul_pull_up_enable){
+	if (ul_pull_up_enable) {
+		p_pio->PIO_PUER = ul_mask;
+	} else {
+		p_pio->PIO_PUDR = ul_mask;
+	}
+}
 
 // Function to start the uC
 void init(void){
@@ -141,9 +156,9 @@ void init(void){
 	pio_set_input(BUT3_PIO, BUT3_PIO_IDX_MASK, PIO_DEFAULT);
 	
 	// Activate the pull-up
-	pio_pull_up(BUT1_PIO, BUT1_PIO_IDX_MASK, 1);
-	pio_pull_up(BUT2_PIO, BUT2_PIO_IDX_MASK, 1);
-	pio_pull_up(BUT3_PIO, BUT3_PIO_IDX_MASK, 1);
+	_pio_pull_up(BUT1_PIO, BUT1_PIO_IDX_MASK, 1);
+	_pio_pull_up(BUT2_PIO, BUT2_PIO_IDX_MASK, 1);
+	_pio_pull_up(BUT3_PIO, BUT3_PIO_IDX_MASK, 1);
 }
 
 /************************************************************************/
