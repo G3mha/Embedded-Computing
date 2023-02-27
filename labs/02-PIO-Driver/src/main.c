@@ -156,6 +156,45 @@ void _pio_set_input(Pio *p_pio, const uint32_t ul_mask, const uint32_t ul_attrib
 	}	
 }
 
+/**
+ * \brief Configure one or more pin(s) of a PIO controller as outputs, with
+ * the given default value. Optionally, the multi-drive feature can be enabled
+ * on the pin(s).
+ *
+ * \param p_pio Pointer to a PIO instance.
+ * \param ul_mask Bitmask indicating which pin(s) to configure.
+ * \param ul_default_level Default level on the pin(s).
+ * \param ul_multidrive_enable Indicates if the pin(s) shall be configured as
+ * open-drain.
+ * \param ul_pull_up_enable Indicates if the pin shall have its pull-up
+ * activated.
+ */
+void _pio_set_output(Pio *p_pio, const uint32_t ul_mask,
+        const uint32_t ul_default_level,
+        const uint32_t ul_multidrive_enable,
+        const uint32_t ul_pull_up_enable)
+{
+	// use _pio_pull_up() to enable/disable pull-up
+	_pio_pull_up(p_pio, ul_mask, ul_pull_up_enable);
+	
+	if (ul_default_level) {
+		p_pio->PIO_SODR = ul_mask;
+	} else {
+		p_pio->PIO_CODR = ul_mask;
+	}
+	
+	if (ul_multidrive_enable) {
+		p_pio->PIO_MDER = ul_mask;
+	} else {
+		p_pio->PIO_MDDR = ul_mask;
+	}
+	
+	p_pio->PIO_OER = ul_mask;
+	p_pio->PIO_PER = ul_mask;
+}
+
+
+
 // Function to start the uC
 void init(void){
 	// Initialize the board clock
@@ -171,9 +210,9 @@ void init(void){
 	pmc_enable_periph_clk(LED3_PIO_ID);
 	
 	// Set LED_PIO as output (no multi drive and no pull-up resistor)
-	pio_set_output(LED1_PIO, LED1_PIO_IDX_MASK, 0, 0, 0);
-	pio_set_output(LED2_PIO, LED2_PIO_IDX_MASK, 0, 0, 0);
-	pio_set_output(LED3_PIO, LED3_PIO_IDX_MASK, 0, 0, 0);
+	_pio_set_output(LED1_PIO, LED1_PIO_IDX_MASK, 0, 0, 0);
+	_pio_set_output(LED2_PIO, LED2_PIO_IDX_MASK, 0, 0, 0);
+	_pio_set_output(LED3_PIO, LED3_PIO_IDX_MASK, 0, 0, 0);
 	
 	// Initialize the PIO from SW
 	pmc_enable_periph_clk(BUT1_PIO_ID);
