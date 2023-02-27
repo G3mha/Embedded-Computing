@@ -23,6 +23,14 @@
 /* defines                                                              */
 /************************************************************************/
 
+/*  Default pin configuration (no attribute). */
+#define _PIO_DEFAULT             (0u << 0)
+/*  The internal pin pull-up is active. */
+#define _PIO_PULLUP              (1u << 0)
+/*  The internal glitch filter is active. */
+#define _PIO_DEGLITCH            (1u << 1)
+/*  The internal debouncing filter is active. */
+#define _PIO_DEBOUNCE            (1u << 3)
 
 // Configurations for the LED 1 (PA0)
 #define LED1_PIO           PIOA                 // peripheral that controls the LED1
@@ -118,12 +126,34 @@ void _pio_clear(Pio *p_pio, const uint32_t ul_mask)
  * \param ul_pull_up_enable Indicates if the pin(s) internal pull-up shall be
  * configured.
  */
-void _pio_pull_up(Pio *p_pio, const uint32_t ul_mask, const uint32_t ul_pull_up_enable){
+void _pio_pull_up(Pio *p_pio, const uint32_t ul_mask, const uint32_t ul_pull_up_enable)
+{
 	if (ul_pull_up_enable) {
 		p_pio->PIO_PUER = ul_mask;
 	} else {
 		p_pio->PIO_PUDR = ul_mask;
 	}
+}
+
+/**
+ * \brief Configure one or more pin(s) or a PIO controller as inputs.
+ * Optionally, the corresponding internal pull-up(s) and glitch filter(s) can
+ * be enabled.
+ *
+ * \param p_pio Pointer to a PIO instance.
+ * \param ul_mask Bitmask indicating which pin(s) to configure as input(s).
+ * \param ul_attribute PIO attribute(s).
+ */
+void _pio_set_input(Pio *p_pio, const uint32_t ul_mask, const uint32_t ul_attribute)
+{
+	// use _pio_pull_up() to enable/disable pull-up
+	_pio_pull_up(p_pio, ul_mask, ul_attribute);
+	
+	if (ul_attribute & PIO_PULLUP) {
+		p_pio->PIO_IFER = ul_mask;
+	} else {
+		p_pio->PIO_IFDR = ul_mask;
+	}	
 }
 
 // Function to start the uC
@@ -150,15 +180,10 @@ void init(void){
 	pmc_enable_periph_clk(BUT2_PIO_ID);
 	pmc_enable_periph_clk(BUT3_PIO_ID);
 
-	// Set the pin connected to SW as input with pull-up.
-	pio_set_input(BUT1_PIO, BUT1_PIO_IDX_MASK, PIO_DEFAULT);
-	pio_set_input(BUT2_PIO, BUT2_PIO_IDX_MASK, PIO_DEFAULT);
-	pio_set_input(BUT3_PIO, BUT3_PIO_IDX_MASK, PIO_DEFAULT);
-	
-	// Activate the pull-up
-	_pio_pull_up(BUT1_PIO, BUT1_PIO_IDX_MASK, 1);
-	_pio_pull_up(BUT2_PIO, BUT2_PIO_IDX_MASK, 1);
-	_pio_pull_up(BUT3_PIO, BUT3_PIO_IDX_MASK, 1);
+	_pio_set_input(BUT1_PIO, BUT1_PIO_IDX_MASK, _PIO_PULLUP | _PIO_DEBOUNCE);
+	_pio_set_input(BUT2_PIO, BUT2_PIO_IDX_MASK, _PIO_PULLUP | _PIO_DEBOUNCE);
+	_pio_set_input(BUT3_PIO, BUT3_PIO_IDX_MASK, _PIO_PULLUP | _PIO_DEBOUNCE);
+
 }
 
 /************************************************************************/
