@@ -216,6 +216,13 @@ uint32_t _pio_get(Pio *p_pio, const pio_type_t ul_type,
 	}
 }
 
+void _delay_ms(uint32_t ul_dly_ticks)
+{
+	// delay_cycles() is a function that delays the uC for a number of cycles
+	// cpu_ms_2_cy() is a function that converts milliseconds to cycles
+	// sysclk_get_cpu_hz() is a function that returns the CPU clock frequency
+	delay_cycles(cpu_ms_2_cy(ul_dly_ticks, sysclk_get_cpu_hz()));
+}
 // Function to start the uC
 void init(void){
 	// Initialize the board clock
@@ -264,9 +271,9 @@ int main(void)
 			// Blink LED
 			for (int i = 0; i < 5; i++) {
 				_pio_clear(LED1_PIO, LED1_PIO_IDX_MASK); // Clean the pin for LED_PIO_PIN (on)
-				delay_ms(100);
+				_delay_ms(100);
 				_pio_set(LED1_PIO, LED1_PIO_IDX_MASK); // Activate the pin for LED_PIO_PIN (off)
-				delay_ms(100);
+				_delay_ms(100);
 		  	}
 	  	} 
 		if (_pio_get(BUT1_PIO, PIO_INPUT, BUT1_PIO_IDX_MASK)) {
@@ -278,9 +285,9 @@ int main(void)
 			// Blink LED
 			for (int i = 0; i < 5; i++) {
 				_pio_clear(LED2_PIO, LED2_PIO_IDX_MASK); // Clean the pin for LED_PIO_PIN (on)
-				delay_ms(100);
+				_delay_ms(100);
 				_pio_set(LED2_PIO, LED2_PIO_IDX_MASK); // Activate the pin for LED_PIO_PIN (off)
-				delay_ms(100);
+				_delay_ms(100);
 			}
 	  	}
 	  	if (_pio_get(BUT2_PIO, PIO_INPUT, BUT2_PIO_IDX_MASK)) {
@@ -292,9 +299,9 @@ int main(void)
 			// Blink LED
 			for (int i = 0; i < 5; i++) {
 				_pio_clear(LED3_PIO, LED3_PIO_IDX_MASK); // Clean the pin for LED_PIO_PIN (on)
-				delay_ms(100);
+				_delay_ms(100);
 				_pio_set(LED3_PIO, LED3_PIO_IDX_MASK); // Activate the pin for LED_PIO_PIN (off)
-				delay_ms(100);
+				_delay_ms(100);
 		  	}
 		}
 	  	if (_pio_get(BUT3_PIO, PIO_INPUT, BUT3_PIO_IDX_MASK)) {
