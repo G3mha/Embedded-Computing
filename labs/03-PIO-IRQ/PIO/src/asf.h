@@ -111,7 +111,10 @@
 // From module: SAME70 XPLD LED support enabled
 #include <led.h>
 
-// From modu SPI - SAM Implementation
+// From module: SDRAMC configuration for IS42S16100E
+#include <is42s16100e.h>
+
+// From module: SPI - SAM Implementation
 #include <spi_master.h>
 #include <spi_master.h>
 
