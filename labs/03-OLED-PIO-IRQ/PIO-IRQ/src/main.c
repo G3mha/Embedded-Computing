@@ -49,7 +49,6 @@
 /************************************************************************/
 /* flags */
 /************************************************************************/
-volatile char but_flag;
 
 /************************************************************************/
 /* prototype                                                            */
@@ -61,13 +60,6 @@ void pisca_led(int n, int t);
 /* handler / callbacks                                                  */
 /************************************************************************/
 
-/*
- * Exemplo de callback para o botao, sempre que acontecer
- * ira piscar o led por 5 vezes
- *
- * !! Isso é um exemplo ruim, nao deve ser feito na pratica, !!
- * !! pois nao se deve usar delays dentro de interrupcoes    !!
- */
 void but_callback(void)
 {
   if (pio_get(BUT_PIO, PIO_INPUT, BUT_IDX_MASK)) {
