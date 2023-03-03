@@ -12,11 +12,11 @@
 /************************************************************************/
 /* defines                                                              */
 /************************************************************************/
-// LED da Placa
-#define LED_PIO      PIOC
-#define LED_PIO_ID   ID_PIOC
-#define LED_IDX      8
-#define LED_IDX_MASK (1 << LED_IDX)
+// LED1 da Placa
+#define LED1_PIO           PIOA
+#define LED1_PIO_ID        ID_PIOA
+#define LED1_PIO_IDX       0
+#define LED1_PIO_IDX_MASK (1 << LED1_PIO_IDX)
 
 // Configurations for the button 1 (PD28)
 #define BUT1_PIO           PIOD               // peripheral that controls the BUT1
@@ -46,7 +46,6 @@
 /************************************************************************/
 /* flags */
 /************************************************************************/
-volatile char but_flag = 0;
 volatile char but1_flag = 0;
 volatile char but2_flag = 0;
 volatile char but3_flag = 0;
@@ -62,10 +61,6 @@ void io_init(void);
 /************************************************************************/
 /* handler / callbacks */
 /************************************************************************/
-void but_callback(void) {
-	but_flag = 1;
-}
-
 void but1_callback(void) {
 	but1_flag = 1;
 }
@@ -90,9 +85,9 @@ void handle_frequency(int is_up) {
 /* functions                                                              */
 /************************************************************************/
 void io_init(void) {
-	// Inicializa clock do periférico PIO responsavel pelo LED
-	pmc_enable_periph_clk(LED_PIO_ID);
-	pio_configure(LED_PIO, PIO_OUTPUT_0, LED_IDX_MASK, PIO_DEBOUNCE);
+	// Inicializa clock do periférico PIO responsavel pelo LED1
+	pmc_enable_periph_clk(LED1_PIO_ID);
+	pio_configure(LED1_PIO, PIO_OUTPUT_0, LED1_PIO_IDX_MASK, PIO_DEBOUNCE);
 	
   	// Inicializa clock do periférico PIO responsavel pelo botao
 	pmc_enable_periph_clk(BUT1_PIO_ID);
@@ -144,7 +139,6 @@ int main (void) {
 	io_init();
 
 	while(1) {
-		int n = 26;
 		char str1[14];
 		char str2[14];
 		int time_ = 30000;
@@ -184,16 +178,12 @@ int main (void) {
 			itoa(freq, snum, 10);
 			gfx_mono_draw_string("Hz", 60,0, &sysfont);
 			gfx_mono_draw_string(snum, 40,0, &sysfont);
-			
-			
-			pio_clear(LED_PIO, LED_IDX_MASK);
+
+			pio_clear(LED1_PIO, LED1_PIO_IDX_MASK);
 			delay_us(delay/2);
-			pio_set(LED_PIO, LED_IDX_MASK);
+			pio_set(LED1_PIO, LED1_PIO_IDX_MASK);
 			delay_us(delay/2);
-		}
-		gfx_mono_draw_string("             ", 0,16, &sysfont);
-		gfx_mono_draw_string("    LAB 3    ", 0,16, &sysfont);
-			
+		}			
 		pmc_sleep(SAM_PM_SMODE_SLEEP_WFI);
 	}
 }
