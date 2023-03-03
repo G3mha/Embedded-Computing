@@ -87,7 +87,6 @@ void pisca_led(int n, int t){
 // Inicializa botao SW0 do kit com interrupcao
 void io_init(void)
 {
-
   // Configura led
 	pmc_enable_periph_clk(LED_PIO_ID);
 	pio_configure(LED_PIO, PIO_OUTPUT_0, LED_IDX_MASK, PIO_DEFAULT);

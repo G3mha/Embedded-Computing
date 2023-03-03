@@ -7,16 +7,16 @@
 #include "gfx_mono_ug_2832hsweg04.h"
 #include "gfx_mono_text.h"
 #include "sysfont.h"
+#include <string.h>
 
 /************************************************************************/
 /* defines                                                              */
 /************************************************************************/
-
-// Configurations for the LED 1 (PA0)
-#define LED1_PIO           PIOA                 // peripheral that controls the LED1
-#define LED1_PIO_ID        ID_PIOA              // ID from peripheral PIOA (controls LED1)
-#define LED1_PIO_IDX       0                    // ID from LED1 in PIO
-#define LED1_PIO_IDX_MASK  (1 << LED1_PIO_IDX)   // Mask to CONTROL the LED1
+// LED da Placa
+#define LED_PIO      PIOC
+#define LED_PIO_ID   ID_PIOC
+#define LED_IDX      8
+#define LED_IDX_MASK (1 << LED_IDX)
 
 // Configurations for the button 1 (PD28)
 #define BUT1_PIO           PIOD               // peripheral that controls the BUT1
@@ -43,10 +43,10 @@
 /************************************************************************/
 /* variaveis globais                                                    */
 /************************************************************************/
-
 /************************************************************************/
 /* flags */
 /************************************************************************/
+volatile char but_flag = 0;
 volatile char but1_flag = 0;
 volatile char but2_flag = 0;
 volatile char but3_flag = 0;
@@ -54,10 +54,18 @@ volatile int freq = 1;
 /************************************************************************/
 /* prototype                                                            */
 /************************************************************************/
-void pisca_led(int n, int t);
+void but1_callback(void);
+void but2_callback(void);
+void but3_callback(void);
+void handle_frequency(int is_up);
+void io_init(void);
 /************************************************************************/
 /* handler / callbacks */
 /************************************************************************/
+void but_callback(void) {
+	but_flag = 1;
+}
+
 void but1_callback(void) {
 	but1_flag = 1;
 }
@@ -81,60 +89,111 @@ void handle_frequency(int is_up) {
 /************************************************************************/
 /* functions                                                              */
 /************************************************************************/
-// pisca led N vez no periodo T
-void pisca_led(int n, int t){
-  for (int i=0;i<n;i++){
-    pio_clear(LED_PIO, LED_IDX_MASK);
-    delay_ms(t);
-    pio_set(LED_PIO, LED_IDX_MASK);
-    delay_ms(t);
-  }
-}
+void io_init(void) {
+	// Inicializa clock do periférico PIO responsavel pelo LED
+	pmc_enable_periph_clk(LED_PIO_ID);
+	pio_configure(LED_PIO, PIO_OUTPUT_0, LED_IDX_MASK, PIO_DEBOUNCE);
+	
+  	// Inicializa clock do periférico PIO responsavel pelo botao
+	pmc_enable_periph_clk(BUT1_PIO_ID);
+	pmc_enable_periph_clk(BUT2_PIO_ID);
+	pmc_enable_periph_clk(BUT3_PIO_ID);
+	
+	// Configura PIO para lidar com o pino do botão como entrada
+  	// com pull-up	
+	pio_configure(BUT1_PIO, PIO_INPUT, BUT1_PIO_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
+	pio_configure(BUT2_PIO, PIO_INPUT, BUT2_PIO_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
+	pio_configure(BUT3_PIO, PIO_INPUT, BUT3_PIO_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
+  	pio_set_debounce_filter(BUT1_PIO, BUT1_PIO_IDX_MASK, 60);
+  	pio_set_debounce_filter(BUT2_PIO, BUT2_PIO_IDX_MASK, 60);
+  	pio_set_debounce_filter(BUT3_PIO, BUT3_PIO_IDX_MASK, 60);
+	
+	// Configura interrupção no pino referente ao botao e associa
+	// função de callback caso uma interrupção for gerada
+	// a função de callback é a: but_callback()
+	pio_handler_set(BUT1_PIO, BUT1_PIO_ID, BUT1_PIO_IDX_MASK, PIO_IT_FALL_EDGE, but1_callback);
+	pio_handler_set(BUT2_PIO, BUT2_PIO_ID, BUT2_PIO_IDX_MASK, PIO_IT_FALL_EDGE, but2_callback);
+	pio_handler_set(BUT3_PIO, BUT3_PIO_ID, BUT3_PIO_IDX_MASK, PIO_IT_FALL_EDGE, but3_callback);
 
+	// Ativa interrupção e limpa primeira IRQ gerada na ativacao
+	pio_enable_interrupt(BUT1_PIO, BUT1_PIO_IDX_MASK);
+	pio_enable_interrupt(BUT2_PIO, BUT2_PIO_IDX_MASK);
+	pio_enable_interrupt(BUT3_PIO, BUT3_PIO_IDX_MASK);
+  	pio_get_interrupt_status(BUT1_PIO);
+  	pio_get_interrupt_status(BUT2_PIO);
+  	pio_get_interrupt_status(BUT3_PIO);
+	
+	// Configura NVIC para receber interrupcoes do PIO do botao
+  	// com prioridade 4 (quanto mais próximo de 0 maior)
+  	NVIC_EnableIRQ(BUT1_PIO_ID);
+	NVIC_EnableIRQ(BUT2_PIO_ID);
+	NVIC_EnableIRQ(BUT3_PIO_ID);
+	NVIC_SetPriority(BUT1_PIO_ID, 4);
+	NVIC_SetPriority(BUT2_PIO_ID, 4);
+	NVIC_SetPriority(BUT3_PIO_ID, 4);
+}
 /************************************************************************/
 /* Main                                                                 */
 /************************************************************************/
 
-
-
-
-int main (void)
-{
-	
+int main (void) {
 	board_init();
 	sysclk_init();
 	delay_init();
-
-  // Init OLED
 	gfx_mono_ssd1306_init();
-  
-  
-	gfx_mono_draw_filled_circle(20, 16, 16, GFX_rXEL_SET, GFX_WHOLE);
-  gfx_mono_draw_string("mundo", 50,16, &sysfont);
-  
-  
+	io_init();
 
-  /* Insert application code here, after the board has been initialized. */
 	while(1) {
-
-
-
-			// Escreve na tela um circulo e um texto
-			
-			for(int i=70;i<=120;i+=2){
-				
-				gfx_mono_draw_rect(i, 5, 2, 10, GFX_PIXEL_SET);
-				delay_ms(10);
-				
+		int n = 26;
+		char str1[14];
+		char str2[14];
+		int time_ = 30000;
+		int delay = 1000000/freq;
+		int max_i = (1000*time_/delay);
+		for (int i=0; i<max_i; i++) {
+			if (but1_flag) {
+				handle_frequency(1);
+				gfx_mono_draw_string("+", 90,0, &sysfont);
+				delay_ms(500);
+				gfx_mono_draw_string(" ", 90,0, &sysfont);
+				but1_flag = 0;
 			}
-			
-			for(int i=120;i>=70;i-=2){
-				
-				gfx_mono_draw_rect(i, 5, 2, 10, GFX_PIXEL_CLR);
-				delay_ms(10);
-				
+			if (but3_flag) {
+				handle_frequency(0);
+				gfx_mono_draw_string("-", 20,0, &sysfont);
+				delay_ms(500);
+				gfx_mono_draw_string(" ", 20,0, &sysfont);
+				but3_flag = 0;
 			}
+			delay = 1000000/freq;
+			max_i = (1000*time_/delay);
+			while(but2_flag==1){
+				gfx_mono_draw_string("    PAUSE    ", 0,16, &sysfont);
+			}
+			but2_flag = 0;
+			
+			float temp = (13*i)/max_i;
+			int progress = (int) temp;
+			strcpy (str1," ");
+			strcpy (str2,"xxxxxxxxxxxxx");
+			strncat (str1, str2, progress);
+			gfx_mono_draw_string("             ", 0,16, &sysfont);
+			gfx_mono_draw_string(str1, 0,16, &sysfont);
+			
+			char snum[5];
+			itoa(freq, snum, 10);
+			gfx_mono_draw_string("Hz", 60,0, &sysfont);
+			gfx_mono_draw_string(snum, 40,0, &sysfont);
 			
 			
+			pio_clear(LED_PIO, LED_IDX_MASK);
+			delay_us(delay/2);
+			pio_set(LED_PIO, LED_IDX_MASK);
+			delay_us(delay/2);
+		}
+		gfx_mono_draw_string("             ", 0,16, &sysfont);
+		gfx_mono_draw_string("    LAB 3    ", 0,16, &sysfont);
+			
+		pmc_sleep(SAM_PM_SMODE_SLEEP_WFI);
 	}
 }
