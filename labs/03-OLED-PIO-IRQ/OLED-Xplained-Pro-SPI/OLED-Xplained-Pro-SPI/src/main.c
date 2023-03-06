@@ -49,7 +49,7 @@
 volatile char but1_flag = 0;
 volatile char but2_flag = 0;
 volatile char but3_flag = 0;
-volatile int freq = 1;
+volatile int frequency = 1;
 /************************************************************************/
 /* prototype                                                            */
 /************************************************************************/
@@ -62,7 +62,7 @@ void io_init(void);
 /* handler / callbacks */
 /************************************************************************/
 void but1_callback(void) {
-	but1_flag = 1;
+	but1_flag = !but1_flag;
 }
 
 void but2_callback(void) {
@@ -70,15 +70,15 @@ void but2_callback(void) {
 }
 
 void but3_callback(void) {
-	but3_flag = 1;
+	but3_flag = !but3_flag;
 }
 
 void handle_frequency(int is_up) {
-	if (freq <= 10 && is_up) {
-		freq += 1;
+	if (frequency <= 10 && is_up) {
+		frequency += 1;
 	}
-	if (freq > 1 && !is_up) {
-		freq -= 1;
+	if (frequency > 1 && !is_up) {
+		frequency -= 1;
 	}
 };
 /************************************************************************/
@@ -106,7 +106,7 @@ void io_init(void) {
 	// Configura interrupção no pino referente ao botao e associa
 	// função de callback caso uma interrupção for gerada
 	// a função de callback é a: but_callback()
-	pio_handler_set(BUT1_PIO, BUT1_PIO_ID, BUT1_PIO_IDX_MASK, PIO_IT_FALL_EDGE, but1_callback);
+	pio_handler_set(BUT1_PIO, BUT1_PIO_ID, BUT1_PIO_IDX_MASK, PIO_IT_RISE_EDGE, but1_callback);
 	pio_handler_set(BUT2_PIO, BUT2_PIO_ID, BUT2_PIO_IDX_MASK, PIO_IT_FALL_EDGE, but2_callback);
 	pio_handler_set(BUT3_PIO, BUT3_PIO_ID, BUT3_PIO_IDX_MASK, PIO_IT_FALL_EDGE, but3_callback);
 
@@ -130,7 +130,6 @@ void io_init(void) {
 /************************************************************************/
 /* Main                                                                 */
 /************************************************************************/
-
 int main (void) {
 	board_init();
 	sysclk_init();
@@ -141,10 +140,10 @@ int main (void) {
 	while(1) {
 		char str1[14];
 		char str2[14];
-		int time_ = 30000;
-		int delay = 1000000/freq;
-		int max_i = (1000*time_/delay);
-		for (int i=0; i<max_i; i++) {
+		int base_time = 30000;
+		int delay = 1000000/frequency;
+		int max_i = (1000*base_time/delay);
+		for (int i=0; i< max_i; i++) {
 			if (but1_flag) {
 				handle_frequency(1);
 				gfx_mono_draw_string("+", 90,0, &sysfont);
@@ -159,8 +158,8 @@ int main (void) {
 				gfx_mono_draw_string(" ", 20,0, &sysfont);
 				but3_flag = 0;
 			}
-			delay = 1000000/freq;
-			max_i = (1000*time_/delay);
+			delay = 1000000/frequency;
+			max_i = (1000*base_time/delay);
 			while(but2_flag==1){
 				gfx_mono_draw_string("    PAUSE    ", 0,16, &sysfont);
 			}
@@ -175,9 +174,9 @@ int main (void) {
 			gfx_mono_draw_string(str1, 0,16, &sysfont);
 			
 			char snum[5];
-			itoa(freq, snum, 10);
-			gfx_mono_draw_string("Hz", 60,0, &sysfont);
+			itoa(frequency, snum, 10);
 			gfx_mono_draw_string(snum, 40,0, &sysfont);
+			gfx_mono_draw_string("Hz", 60,0, &sysfont);
 
 			pio_clear(LED1_PIO, LED1_PIO_IDX_MASK);
 			delay_us(delay/2);
